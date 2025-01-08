@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKHSS Classroom</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        header {
+            padding: 1rem;
+            text-align: center;
+        }
+
+        nav {
+            padding: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+
+        main {
+            margin: 2rem auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .upload-section,
+        .message-section,
+        .announcement-section,
+        .login-section {
+            margin-bottom: 2rem;
+        }
+
+        .uploaded-files,
+        .messages,
+        .announcements {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .call-section {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .call-section a {
+            text-decoration: none;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: black;
+            opacity: 1;
+        }
+
+        /* Fullscreen overlay styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Loading spinner */
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: white;
+        }
+
+        .textdark {
+            color: black;
+        }
+
+        ul {
+            list-style-type: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="bg-primary text-light">
+        <h1 class="display-4">Simple Login</h1>
+    </header>
+
+    <main class="container">
+        <!-- Login Section -->
+        <div id="login" class="login-section bg-secondary text-light p-4 rounded mx-auto" style="max-width: 400px;">
+            <h2 class="fs-4 text-center">Login</h2>
+            <div class="mb-3">
+                <label for="username" class="form-label">Username:</label>
+                <input type="email" id="username" class="form-control bg-light text-dark rounded-pill"
+                    placeholder="Enter your username" />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password:</label>
+                <input type="password" id="password" class="form-control bg-light text-dark rounded-pill"
+                    placeholder="Enter your password" />
+            </div>
+            <!-- Remember Me Checkbox -->
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="remember-me" />
+                <label class="form-check-label" for="remember-me">Remember Me</label>
+            </div>
+            <button onclick="login()" class="btn btn-primary w-100 rounded-pill">Login</button>
+            <p id="error-message" class="text-danger mt-3" style="display: none;">Invalid username or password</p>
+        </div>
+
+        <!-- Main Content (Visible After Login) -->
+        <div id="content" class="hidden">
+            <nav class="bg-secondary text-light p-3 rounded d-flex flex-wrap justify-content-center gap-2">
+                <button class="btn btn-light bg-light" onclick="showHome()"><i class="bi bi-arrow-left-circle"></i></button>
+                <button class="btn btn-light" onclick="showSection('upload')">Upload Documents</button>
+                <button class="btn btn-light" onclick="showSection('announcement')">Announcements</button>
+                <button class="btn btn-light" onclick="showSection('message')">Messages</button>
+                <button class="btn btn-light" onclick="showSection('call')">Video Call</button>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </nav>
+
+            <div id="upload" class="upload-section hidden mt-4">
+                <h2 class="fs-4">Upload Documents</h2>
+                <label for="file-upload" class="form-label">Choose a file to upload:</label>
+                <input type="file" id="file-upload" class="form-control" />
+                <button onclick="uploadFile()" class="btn btn-primary mt-2">Upload</button>
+                <div class="uploaded-files mt-3">
+                    <h3 class="fs-5 text-dark">Uploaded Files:</h3>
+                    <ul id="file-list" class="text-dark"></ul>
+                </div>
+            </div>
+
+            <div id="announcement" class="announcement-section hidden mt-4">
+                <h2 class="fs-4">Post Announcements</h2>
+                <label for="announcement-text" class="form-label">Write an announcement:</label>
+                <textarea id="announcement-text" rows="4" class="form-control"></textarea>
+                <button onclick="postAnnouncement()" class="btn btn-primary mt-2">Post</button>
+                <div class="announcements mt-3">
+                    <h3 class="fs-5 text-dark">Announcements:</h3>
+                    <ul id="announcement-list" class="text-dark"></ul>
+                </div>
+            </div>
+
+            <div id="message" class="message-section hidden mt-4">
+                <h2 class="fs-4">Send a Message</h2>
+                <label for="message-text" class="form-label">Write a message:</label>
+                <textarea id="message-text" rows="4" class="form-control"></textarea>
+                <button onclick="sendMessage()" class="btn btn-primary mt-2">Send</button>
+                <div class="messages mt-3">
+                    <h3 class="fs-5 text-dark">Messages:</h3>
+                    <ul id="message-list" class="text-dark"></ul>
+                </div>
+            </div>
+
+            <div id="call" class="call-section hidden mt-4">
+                <h2 class="fs-4">Start a Video Call</h2>
+                <p>Click the button below to generate a video call link:</p>
+                <button onclick="generateCallLink()" class="btn btn-primary">Generate Call Link</button>
+                <p id="call-link" class="hidden mt-3">
+                    <a href="#" target="_blank" class="btn btn-secondary">Join Call</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-primary text-light mt-5">
+        <p>© Simple Login By f1h1dz_here 2025</p>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Modal for Incorrect Login -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorModalLabel">Login Failed</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Invalid username or password.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const validUsername = "user";
+        const validPassword = "user123";
+
+        // Check if the user is already logged in on page load
+        window.onload = function() {
+            if (localStorage.getItem('loggedIn') === 'true') {
+                document.getElementById("login").classList.add("hidden");
+                document.getElementById("content").classList.remove("hidden");
+            }
+        }
+
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const rememberMe = document.getElementById("remember-me").checked;
+
+            const loadingOverlay = document.getElementById("loading-overlay");
+
+            loadingOverlay.classList.add("show");
+
+            setTimeout(() => {
+                loadingOverlay.classList.remove("show");
+
+                if (username === validUsername && password === validPassword) {
+                    document.getElementById("login").classList.add("hidden");
+                    document.getElementById("content").classList.remove("hidden");
+
+                    // Store the login status in localStorage if "Remember Me" is checked
+                    if (rememberMe) {
+                        localStorage.setItem('loggedIn', 'true');
+                    }
+
+                } else {
+                    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                    errorModal.show();
+                }
+            }, 1500);
+        }
+
+        function logout() {
+            // Clear the login status from localStorage
+            localStorage.removeItem('loggedIn');
+
+            document.getElementById("login").classList.remove("hidden");
+            document.getElementById("content").classList.add("hidden");
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll("#content > div").forEach(div => div.classList.add("hidden"));
+            document.getElementById(sectionId).classList.remove("hidden");
+        }
+
+        function showHome() {
+            document.querySelectorAll("#content > div").forEach(div => div.classList.add("hidden"));
+        }
+
+        function uploadFile() {
+            const fileInput = document.getElementById("file-upload");
+            const fileList = document.getElementById("file-list");
+
+            if (fileInput.files.length > 0) {
+                const listItem = document.createElement("li");
+                listItem.textContent = fileInput.files[0].name;
+                fileList.appendChild(listItem);
+                fileInput.value = "";
+            }
+        }
+
+        function postAnnouncement() {
+            const text = document.getElementById("announcement-text").value;
+            if (text.trim()) {
+                const listItem = document.createElement("li");
+                listItem.textContent = text;
+                document.getElementById("announcement-list").appendChild(listItem);
+                document.getElementById("announcement-text").value = "";
+            }
+        }
+
+        function sendMessage() {
+            const text = document.getElementById("message-text").value;
+            if (text.trim()) {
+                const listItem = document.createElement("li");
+                listItem.textContent = text;
+                document.getElementById("message-list").appendChild(listItem);
+                document.getElementById("message-text").value = "";
+            }
+        }
+
+        function generateCallLink() {
+            const callLink = document.getElementById("call-link");
+            callLink.querySelector("a").href = "https://meet.google.com/new";
+            callLink.classList.remove("hidden");
+        }
+    </script>
+</body>
+
+</html>
